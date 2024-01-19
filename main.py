@@ -59,6 +59,9 @@ if not check_password():
 if 'df' not in st.session_state:
     st.session_state.df = None
 
+if "df_electrode_locations" not in st.session_state:
+    st.session_state.df_electrode_locations = None
+
 
 def main():
     st.title("National Rocks ERT Data Analysis")
@@ -80,6 +83,50 @@ def main():
             df = pd.read_excel(uploaded_file, engine='openpyxl')
             st.session_state.df = df
             st.dataframe(df)  # Display the DataFrame in Streamlit
+
+            column_to_check = 0  # Change this to the index of your desired column
+
+            # Find the index where the values in the specified column start decreasing
+            index_to_stop = (df.iloc[:, column_to_check].diff() < 0).idxmax()
+
+            # Get the data until the index where it starts decreasing again
+            filtered_data = df.iloc[:index_to_stop, :]
+
+            # Extract relevant information
+            spacing = filtered_data.iloc[1, 0] - filtered_data.iloc[0, 0]
+
+            # Calculate actual points based on the first point and spacing
+            first_point = 0
+            num_points = len(filtered_data)
+            actual_points = np.linspace(
+                first_point, (num_points - 1) * spacing, num_points)
+
+            # Calculate mean of the second column in filtered_data for two rolling rows
+            rolling_mean = (
+                filtered_data.iloc[:, 1] + filtered_data.iloc[:, 1].shift(-1)) / 2
+
+            # Ensure actual_points and rolling_mean have the same length
+            min_length = min(len(actual_points), len(rolling_mean))
+            actual_points = actual_points[:min_length]
+            rolling_mean = rolling_mean[:min_length]
+
+            # Fill the last NaN value in rolling_mean with the previous value
+            rolling_mean.iloc[-1] = rolling_mean.iloc[-2]
+
+            result_df = pd.DataFrame(
+                {'Actual Points': actual_points, 'Mean of Second Column': rolling_mean})
+
+            new_row = result_df.iloc[-1:].copy()
+            new_row['Actual Points'] += spacing
+
+            result_df = pd.concat([result_df, new_row], ignore_index=True)
+
+            new_row = result_df.iloc[-1:].copy()
+            new_row['Actual Points'] += spacing
+
+            result_df = pd.concat([result_df, new_row], ignore_index=True)
+
+            st.session_state.df_electrode_locations = result_df
         except Exception as e:
             st.toast('Error: Please upload a valid Excel file', icon='🤯')
     else:
@@ -93,6 +140,7 @@ def main():
             st.write("Please enter the parameters for the plots")
 
             # Add sliders with help text
+
             st.slider('Smoothing', 0.0, 20.0, 4.0, 0.1, key='smoothing',
                       help='Adjust the level of smoothing applied to the data.')
             st.slider('Number of contours', 2, 30, 15, 1, key='number_of_contours',
@@ -104,8 +152,8 @@ def main():
             st.slider('Font size contour label', 2, 20, 10, 1, key='fontsize_contour_label',
                       help='Adjust the font size of the contour labels.')
 
-            st.slider('Skip contour every nth', 1, 5, 1, 1, key='skip_contour_every_nth',
-                      help='Specify the interval for skipping contour lines.')
+            st.slider('Skip contour label every nth contour', 1, 5, 1, 1, key='skip_contour_every_nth',
+                      help='Specify the interval for skipping contour labels. This is useful when there are too many contour lines')
             st.slider('Contour bold every nth', 1, 10, 5, 1, key='contour_bold_every_nth',
                       help='Specify the interval for making contour lines bold.')
 
@@ -130,18 +178,23 @@ def main():
             # Add help text to the checkbox
             st.checkbox('Plot aspect ratio equal', value=True,
                         help='Check to make the plot aspect ratio equal so that one unit on the x-axis is equal to one unit on the y-axis', key='aspect_ratio_equal')
+            st.number_input(
+                'Figure size (inches)', 1, 100, 15, 1, key='figure_width_inches',
+                help="Specify the size of the figure in inches. This is useful when the figure is too small or too large."
+                "Increase the the size if the length of the x-axis is too large."
+                "Decrease the size if the length of the x-axis is too small."
+            )
 
-            # ...
+            st.number_input(
+                'Electrode marker size', 1, 20, 4, 1, key='electrode_marker_size',
+                help="Specify the size of the electrode markers."
+            )
 
             submit_button = st.form_submit_button(label='Apply changes')
 
         st.title("Data plots")
 
         data = st.session_state.df.to_numpy()
-
-        # Assuming 'data' is a NumPy array with three columns (x, z, rho)
-
-        # Smooth the data
 
         data[:, 2] = gaussian_filter(
             data[:, 2], sigma=st.session_state.smoothing)
@@ -156,8 +209,22 @@ def main():
 
         triang = Triangulation(x, z)
 
+        def apply_mask(triang, alpha=0.4):
+            # Mask triangles with sidelength bigger some alpha
+            triangles = triang.triangles
+            # Mask off unwanted triangles.
+            xtri = x[triangles] - np.roll(x[triangles], 1, axis=1)
+            ytri = z[triangles] - np.roll(z[triangles], 1, axis=1)
+            maxi = np.max(np.sqrt(xtri**2 + ytri**2), axis=1)
+            # apply masking
+            triang.set_mask(maxi > alpha)
+
+        apply_mask(triang, alpha=10)
+
         fig, ax = plt.subplots(
-            facecolor='white', edgecolor='white', figsize=(16, 8))
+            facecolor='white', edgecolor='white',
+            figsize=(st.session_state['figure_width_inches'],
+                     st.session_state['figure_width_inches']), dpi=300)
 
         # Basic contour lines
         cs = ax.tricontour(triang, rho, levels=clevels,
@@ -184,9 +251,16 @@ def main():
         cc = ax.tricontourf(triang, rho, levels=clevels, cmap=st.session_state.color_map,
                             norm=matplotlib.colors.LogNorm(vmin=rho.min(), vmax=rho.max()))
 
+        ax.scatter(st.session_state.df_electrode_locations.iloc[:, 0],
+                   st.session_state.df_electrode_locations.iloc[:, 1],
+                   marker="|", color='r',
+                   s=st.session_state.electrode_marker_size,
+                   )
+
         if st.session_state.aspect_ratio_equal:
             ax.set_aspect(
                 aspect='equal', adjustable='box')
+
         ax.set_xlabel('Distance (m)')
         ax.set_ylabel('Elevation (m)')
 
@@ -215,11 +289,6 @@ def main():
 
         # Set colorbar label
         cbar.set_label('Resistivity (Ω.m)')
-
-        if st.session_state.aspect_ratio_equal:
-            use_container_width = False
-        else:
-            use_container_width = True
 
         # Define file formats and their properties
         file_formats = {
@@ -263,7 +332,6 @@ def main():
                   bbox_inches='tight',
                   pad_inches=0.2,
                   use_container_width=True
-
                   )
 
 
