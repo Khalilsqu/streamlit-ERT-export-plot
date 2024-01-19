@@ -134,8 +134,6 @@ def main():
 
     if st.session_state.df is not None:
 
-
-
         with st.expander("Plot settings"):
             with st.form(key='my_form', border=False):
                 st.write("Please enter the parameters for the plots")
@@ -225,11 +223,24 @@ def main():
                         key='figure_dpi',
                         help="Specify the resolution of the figure. This is useful when the figure is too small or too large."
                     )
+                col1, col2, col3 = st.columns(3)
 
-                st.number_input(
-                    'Electrode marker size', 1, 20, 4, 1, key='electrode_marker_size',
-                    help="Specify the size of the electrode markers."
-                )
+                with col1:
+                    st.number_input(
+                        'Electrode marker size', 1, 40, 4, 1, key='electrode_marker_size',
+                        help="Specify the size of the electrode markers."
+                    )
+                with col2:
+                    st.number_input(
+                        "Tick label font size", 1, 40, 10, 1, key='tick_label_font_size',
+                        help="Specify the font size of the tick labels."
+                    )
+
+                with col3:
+                    st.number_input(
+                        "Axis label font size", 1, 60, 14, 1, key='axis_label_font_size',
+                        help="Specify the font size of the axis labels."
+                    )
 
                 submit_button = st.form_submit_button(label='Apply changes')
 
@@ -305,8 +316,12 @@ def main():
             ax.set_aspect(
                 aspect='equal', adjustable='box')
 
-        ax.set_xlabel('Distance (m)')
-        ax.set_ylabel('Elevation (m)')
+        ax.set_xlabel('Distance (m)',
+                      fontsize=st.session_state.axis_label_font_size
+                      )
+        ax.set_ylabel('Elevation (m)',
+                      fontsize=st.session_state.axis_label_font_size
+                      )
 
         # Limit x and y axes to range to fit data
         x_range = x.max() - x.min()
@@ -315,8 +330,15 @@ def main():
         ax.set_ylim([min(triang.y) - 0.1 * y_range,
                     max(triang.y) + 0.2 * y_range])
 
+        ax.tick_params(axis='both', which='major',
+                       labelsize=st.session_state.tick_label_font_size)
+        ax.tick_params(axis='both', which='minor',
+                       labelsize=st.session_state.tick_label_font_size)
+
         ax.set_title(
-            f'ERT Data for {uploaded_file.name.split(".")[0]}', fontsize=20)
+            f'ERT Data for {uploaded_file.name.split(".")[0]}',
+            fontsize=st.session_state.axis_label_font_size+2
+        )
 
         # Add colorbar
         divider = make_axes_locatable(ax)
@@ -327,7 +349,9 @@ def main():
         #                               int(np.ceil(np.log10(rho.max()))), 1)]
         # cbar.set_ticks(ticks)
         # cbar.set_ticklabels(["$10^{%d}$" % np.log10(tick) for tick in ticks])
-        cbar.set_label('Resistivity (Ω.m)')
+        cbar.set_label('Resistivity (Ω.m)',
+                       fontsize=st.session_state.axis_label_font_size)
+        cbar.ax.tick_params(labelsize=st.session_state.tick_label_font_size)
 
         # Define file formats and their properties
         file_formats = {
