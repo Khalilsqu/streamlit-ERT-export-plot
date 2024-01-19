@@ -242,7 +242,10 @@ def main():
                         help="Specify the font size of the axis labels."
                     )
 
-                col1_xtick_number_bins, col2_ytick_number_bins = st.columns(2)
+                st.divider()
+
+                col1_xtick_number_bins, col2_ytick_number_bins = st.columns(
+                    2)
 
                 with col1_xtick_number_bins:
                     st.number_input(
@@ -255,6 +258,11 @@ def main():
                         "Number of y tick bins", 1, 100, 10, 1, key='y_tick_step_size',
                         help="Specify the number of bins for the y-axis."
                     )
+
+                st.checkbox(
+                    'Show grids', value=False, key='show_grids',
+                    help="Check to show grids on the plot."
+                )
 
                 submit_button = st.form_submit_button(label='Apply changes')
 
@@ -357,6 +365,9 @@ def main():
         # locator_params
         ax.locator_params(axis='x', nbins=st.session_state.x_tick_step_size)
         ax.locator_params(axis='y', nbins=st.session_state.y_tick_step_size)
+
+        if st.session_state.show_grids:
+            ax.grid()
 
         # Add colorbar
         divider = make_axes_locatable(ax)
