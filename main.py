@@ -134,68 +134,104 @@ def main():
 
     if st.session_state.df is not None:
 
-        st.title("Plots Parameters")
 
-        with st.form(key='my_form'):
-            st.write("Please enter the parameters for the plots")
 
-            # Add sliders with help text
+        with st.expander("Plot settings"):
+            with st.form(key='my_form', border=False):
+                st.write("Please enter the parameters for the plots")
 
-            st.slider('Smoothing', 0.0, 20.0, 4.0, 0.1, key='smoothing',
-                      help='Adjust the level of smoothing applied to the data.')
-            st.slider('Number of contours', 2, 30, 15, 1, key='number_of_contours',
-                      help='Specify the number of contour lines to be displayed.')
-            st.slider('Main contour line width', 0.1, 1.0, 0.5, 0.05,
-                      key='main_contour_lw', help='Set the width of the main contour lines.')
-            st.slider('Bold contour line width', 0.1, 2.0, 1.0, 0.05,
-                      key='bold_contour_lw', help='Set the width of the bold contour lines.')
-            st.slider('Font size contour label', 2, 20, 10, 1, key='fontsize_contour_label',
-                      help='Adjust the font size of the contour labels.')
+                # Add sliders with help text
 
-            st.slider('Skip contour label every nth contour', 1, 5, 1, 1, key='skip_contour_every_nth',
-                      help='Specify the interval for skipping contour labels. This is useful when there are too many contour lines')
-            st.slider('Contour bold every nth', 1, 10, 5, 1, key='contour_bold_every_nth',
-                      help='Specify the interval for making contour lines bold.')
+                st.slider('Smoothing', 0.0, 20.0, 4.0, 0.1, key='smoothing',
+                          help='Adjust the level of smoothing applied to the data.')
 
-            color_map_mat = ['viridis', 'plasma', 'inferno', 'magma', 'cividis',
-                             'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
-                             'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
-                             'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn',
-                             'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone',
-                             'pink', 'spring', 'summer', 'autumn', 'winter', 'cool',
-                             'Wistia', 'hot', 'afmhot', 'gist_heat', 'copper',
-                             'twilight', 'twilight_shifted', 'hsv',
-                             'ocean', 'gist_earth', 'terrain',
-                             'gist_stern', 'gnuplot', 'gnuplot2', 'CMRmap',
-                             'cubehelix', 'brg', 'gist_rainbow', 'rainbow', 'jet',
-                             'turbo', 'nipy_spectral', 'gist_ncar',
-                             ]
+                st.divider()
+                st.slider('Number of contours', 2, 30, 15, 1, key='number_of_contours',
+                          help='Specify the number of contour lines to be displayed.')
+                st.slider('Main contour line width', 0.1, 1.0, 0.5, 0.05,
+                          key='main_contour_lw', help='Set the width of the main contour lines.')
+                st.slider('Bold contour line width', 0.1, 2.0, 1.0, 0.05,
+                          key='bold_contour_lw', help='Set the width of the bold contour lines.')
+                st.slider('Font size contour label', 2, 20, 10, 1, key='fontsize_contour_label',
+                          help='Adjust the font size of the contour labels.')
 
-            # Add help text to the selectbox
-            st.selectbox('Color map', color_map_mat, index=color_map_mat.index(
-                'jet'), key='color_map', help='Choose a color map for the plot.')
+                st.slider('Skip contour label every nth contour', 1, 5, 1, 1, key='skip_contour_every_nth',
+                          help='Specify the interval for skipping contour labels. This is useful when there are too many contour lines')
+                st.slider('Contour bold every nth', 1, 10, 5, 1, key='contour_bold_every_nth',
+                          help='Specify the interval for making contour lines bold.')
 
-            # Add help text to the checkbox
-            st.checkbox('Plot aspect ratio equal', value=True,
-                        help='Check to make the plot aspect ratio equal so that one unit on the x-axis is equal to one unit on the y-axis', key='aspect_ratio_equal')
-            st.number_input(
-                'Figure size (inches)',
-                1,
-                100,
-                15,
-                1,
-                key='figure_width_inches',
-                help="Specify the size of the figure in inches. This is useful when the figure is too small or too large."
-                "Increase the the size if the length of the x-axis is too large."
-                "Decrease the size if the length of the x-axis is too small."
-            )
+                color_map_mat = ['viridis', 'plasma', 'inferno', 'magma', 'cividis',
+                                 'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
+                                 'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
+                                 'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn',
+                                 'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone',
+                                 'pink', 'spring', 'summer', 'autumn', 'winter', 'cool',
+                                 'Wistia', 'hot', 'afmhot', 'gist_heat', 'copper',
+                                 'twilight', 'twilight_shifted', 'hsv',
+                                 'ocean', 'gist_earth', 'terrain',
+                                 'gist_stern', 'gnuplot', 'gnuplot2', 'CMRmap',
+                                 'cubehelix', 'brg', 'gist_rainbow', 'rainbow', 'jet',
+                                 'turbo', 'nipy_spectral', 'gist_ncar',
+                                 ]
 
-            st.number_input(
-                'Electrode marker size', 1, 20, 4, 1, key='electrode_marker_size',
-                help="Specify the size of the electrode markers."
-            )
+                # Add help text to the selectbox
+                st.selectbox('Color map', color_map_mat, index=color_map_mat.index(
+                    'jet'), key='color_map', help='Choose a color map for the plot.')
 
-            submit_button = st.form_submit_button(label='Apply changes')
+                st.link_button(
+                    'Color map reference', 'https://matplotlib.org/stable/users/explain/colors/colormaps.html')
+
+                # Add help text to the checkbox
+                st.checkbox('Plot aspect ratio equal', value=True,
+                            help='Check to make the plot aspect ratio equal so that one unit on the x-axis is equal to one unit on the y-axis', key='aspect_ratio_equal')
+
+                st.divider()
+
+                col1_width, col2_height, dpi = st.columns(3)
+
+                with col1_width:
+                    st.number_input(
+                        'Figure width (inches)',
+                        1,
+                        100,
+                        50,
+                        1,
+                        key='figure_width_inches',
+                        help="Specify the width of the figure in inches. This is useful when the figure is too small or too large."
+                        "Increase the the width if the length of the x-axis is too large."
+                        "Decrease the width if the length of the x-axis is too small."
+                    )
+
+                with col2_height:
+                    st.number_input(
+                        'Figure height (inches)',
+                        1,
+                        100,
+                        15,
+                        1,
+                        key='figure_height_inches',
+                        help="Specify the height of the figure in inches. This is useful when the figure is too small or too large."
+                        "Increase the the height if the length of the y-axis is too large."
+                        "Decrease the height if the length of the y-axis is too small."
+                    )
+
+                with dpi:
+                    st.number_input(
+                        'Figure dpi',
+                        50,
+                        1000,
+                        300,
+                        130,
+                        key='figure_dpi',
+                        help="Specify the resolution of the figure. This is useful when the figure is too small or too large."
+                    )
+
+                st.number_input(
+                    'Electrode marker size', 1, 20, 4, 1, key='electrode_marker_size',
+                    help="Specify the size of the electrode markers."
+                )
+
+                submit_button = st.form_submit_button(label='Apply changes')
 
         st.title("Data plots")
 
@@ -229,7 +265,9 @@ def main():
         fig, ax = plt.subplots(
             facecolor='white', edgecolor='white',
             figsize=(st.session_state['figure_width_inches'],
-                     st.session_state['figure_width_inches']), dpi=300)
+                     st.session_state['figure_height_inches']),
+            dpi=st.session_state['figure_dpi']
+        )
 
         # Basic contour lines
         cs = ax.tricontour(triang, rho, levels=clevels,
@@ -258,7 +296,8 @@ def main():
 
         ax.scatter(st.session_state.df_electrode_locations.iloc[:, 0],
                    st.session_state.df_electrode_locations.iloc[:, 1],
-                   marker="|", color='r',
+                   marker="v",
+                   color='r',
                    s=st.session_state.electrode_marker_size,
                    )
 
