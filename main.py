@@ -116,15 +116,15 @@ def main():
             result_df = pd.DataFrame(
                 {'Actual Points': actual_points, 'Mean of Second Column': rolling_mean})
 
-            new_row = result_df.iloc[-1:].copy()
-            new_row['Actual Points'] += spacing
+            # new_row = result_df.iloc[-1:].copy()
+            # new_row['Actual Points'] += spacing
 
-            result_df = pd.concat([result_df, new_row], ignore_index=True)
+            # result_df = pd.concat([result_df, new_row], ignore_index=True)
 
-            new_row = result_df.iloc[-1:].copy()
-            new_row['Actual Points'] += spacing
+            # new_row = result_df.iloc[-1:].copy()
+            # new_row['Actual Points'] += spacing
 
-            result_df = pd.concat([result_df, new_row], ignore_index=True)
+            # result_df = pd.concat([result_df, new_row], ignore_index=True)
 
             st.session_state.df_electrode_locations = result_df
         except Exception as e:
@@ -179,7 +179,12 @@ def main():
             st.checkbox('Plot aspect ratio equal', value=True,
                         help='Check to make the plot aspect ratio equal so that one unit on the x-axis is equal to one unit on the y-axis', key='aspect_ratio_equal')
             st.number_input(
-                'Figure size (inches)', 1, 100, 15, 1, key='figure_width_inches',
+                'Figure size (inches)',
+                1,
+                100,
+                15,
+                1,
+                key='figure_width_inches',
                 help="Specify the size of the figure in inches. This is useful when the figure is too small or too large."
                 "Increase the the size if the length of the x-axis is too large."
                 "Decrease the size if the length of the x-axis is too small."
@@ -277,17 +282,12 @@ def main():
         # Add colorbar
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="1%", pad=0.05)
-        cbar = fig.colorbar(cc, cax=cax, format="%.0e")
+        cbar = fig.colorbar(cc, cax=cax, format="%.0f")
 
-        # Determine appropriate ticks for the colorbar based on the range of rho values
-        min_rho, max_rho = np.min(rho), np.max(rho)
-        ticks = np.logspace(np.log10(min_rho), np.log10(max_rho), num=5)
-
-        # Set colorbar ticks and labels
-        cbar.set_ticks(ticks)
-        cbar.set_ticklabels(["$10^{%d}$" % np.log10(tick) for tick in ticks])
-
-        # Set colorbar label
+        # ticks = [10**i for i in range(int(np.floor(np.log10(rho.min()))),
+        #                               int(np.ceil(np.log10(rho.max()))), 1)]
+        # cbar.set_ticks(ticks)
+        # cbar.set_ticklabels(["$10^{%d}$" % np.log10(tick) for tick in ticks])
         cbar.set_label('Resistivity (Ω.m)')
 
         # Define file formats and their properties
@@ -296,8 +296,6 @@ def main():
             "pdf": {"label": "Download Plot as PDF", "mime": 'application/pdf'},
             "svg": {"label": "Download Plot as SVG", "mime": 'image/svg+xml'},
         }
-
-        # ...
 
         # Add selectbox for choosing the file format
         selected_format = st.selectbox(
