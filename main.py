@@ -6,7 +6,7 @@ import matplotlib
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.tri import Triangulation
-from scipy.ndimage.filters import gaussian_filter
+from scipy.ndimage import gaussian_filter
 from io import BytesIO
 
 import hmac
