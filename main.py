@@ -174,7 +174,7 @@ def main():
 
                 # Add help text to the selectbox
                 st.selectbox('Color map', color_map_mat, index=color_map_mat.index(
-                    'jet'), key='color_map', help='Choose a color map for the plot.')
+                    'rainbow'), key='color_map', help='Choose a color map for the plot.')
 
                 st.link_button(
                     'Color map reference', 'https://matplotlib.org/stable/users/explain/colors/colormaps.html')
@@ -240,6 +240,20 @@ def main():
                     st.number_input(
                         "Axis label font size", 1, 60, 14, 1, key='axis_label_font_size',
                         help="Specify the font size of the axis labels."
+                    )
+
+                col1_xtick_number_bins, col2_ytick_number_bins = st.columns(2)
+
+                with col1_xtick_number_bins:
+                    st.number_input(
+                        "Number of x tick bins", 1, 100, 10, 1, key='x_tick_step_size',
+                        help="Specify the number of bins for the x-axis."
+                    )
+
+                with col2_ytick_number_bins:
+                    st.number_input(
+                        "Number of y tick bins", 1, 100, 10, 1, key='y_tick_step_size',
+                        help="Specify the number of bins for the y-axis."
                     )
 
                 submit_button = st.form_submit_button(label='Apply changes')
@@ -339,6 +353,10 @@ def main():
             f'ERT Data for {uploaded_file.name.split(".")[0]}',
             fontsize=st.session_state.axis_label_font_size+2
         )
+
+        # locator_params
+        ax.locator_params(axis='x', nbins=st.session_state.x_tick_step_size)
+        ax.locator_params(axis='y', nbins=st.session_state.y_tick_step_size)
 
         # Add colorbar
         divider = make_axes_locatable(ax)
