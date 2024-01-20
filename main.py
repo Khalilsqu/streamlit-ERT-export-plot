@@ -268,12 +268,12 @@ def main():
                     "Select file format:",
                     list(file_formats.keys()),
                     index=2,
-                    key='selected_format'
+                    key='selected_format',
+                    help="Select the file format to save the plot."
                 )
 
                 st.divider()
                 st.form_submit_button(label='Click to apply changes')
-
 
         st.title("Data plots")
 
