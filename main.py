@@ -43,6 +43,10 @@ def check_password():
         return True
 
     # Show input for password.
+    st.link_button(
+        'Contact National Rocks to get the password',
+        'https://national-rocks.com/',
+    )
     st.header("Password protected")
     st.write("Please enter the password to continue.")
     st.text_input(
