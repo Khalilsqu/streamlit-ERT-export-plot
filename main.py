@@ -263,13 +263,13 @@ def main():
                     "svg": {"label": "Download Plot as SVG", "mime": 'image/svg+xml'},
                 }
 
-                # Add selectbox for choosing the file format
-                selected_format = st.selectbox(
+                st.radio(
                     "Select file format:",
                     list(file_formats.keys()),
                     index=2,
                     key='selected_format',
-                    help="Select the file format to save the plot."
+                    help="Select the file format to save the plot.",
+                    horizontal=True
                 )
 
                 st.divider()
@@ -393,21 +393,21 @@ def main():
         image_bytes = BytesIO()
 
         # Save plot to BytesIO object based on selected format
-        fig.savefig(image_bytes, format=selected_format,
+        fig.savefig(image_bytes, format=st.session_state.selected_format,
                     bbox_inches='tight', pad_inches=0.2, dpi=300
                     )
         image_bytes.seek(0)
 
         # Get file format properties based on selected format
-        format_properties = file_formats[selected_format]
+        format_properties = file_formats[st.session_state.selected_format]
 
         # Add download button for the selected format
         st.download_button(
             label=format_properties["label"],
             data=image_bytes,
-            file_name=f"{uploaded_file.name.split('.')[0]}.{selected_format}",
+            file_name=f"{uploaded_file.name.split('.')[0]}.{st.session_state.selected_format}",
             mime=format_properties["mime"],
-            key=f'download_button_{selected_format}'
+            key=f'download_button_{st.session_state.selected_format}'
         )
 
         st.pyplot(fig,
