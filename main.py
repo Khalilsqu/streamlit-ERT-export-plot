@@ -116,16 +116,6 @@ def main():
             result_df = pd.DataFrame(
                 {'Actual Points': actual_points, 'Mean of Second Column': rolling_mean})
 
-            # new_row = result_df.iloc[-1:].copy()
-            # new_row['Actual Points'] += spacing
-
-            # result_df = pd.concat([result_df, new_row], ignore_index=True)
-
-            # new_row = result_df.iloc[-1:].copy()
-            # new_row['Actual Points'] += spacing
-
-            # result_df = pd.concat([result_df, new_row], ignore_index=True)
-
             st.session_state.df_electrode_locations = result_df
         except Exception as e:
             st.toast('Error: Please upload a valid Excel file', icon='🤯')
@@ -140,7 +130,7 @@ def main():
 
                 # Add sliders with help text
 
-                st.slider('Smoothing', 0.0, 20.0, 4.0, 0.1, key='smoothing',
+                st.slider('Smoothing', 0.0, 20.0, 2.0, 0.1, key='smoothing',
                           help='Adjust the level of smoothing applied to the data.')
 
                 st.divider()
@@ -249,7 +239,7 @@ def main():
 
                 with col1_xtick_number_bins:
                     st.number_input(
-                        "Number of x tick bins", 1, 100, 10, 1, key='x_tick_step_size',
+                        "Number of x tick bins", 1, 100, 20, 1, key='x_tick_step_size',
                         help="Specify the number of bins for the x-axis."
                     )
 
@@ -264,7 +254,26 @@ def main():
                     help="Check to show grids on the plot."
                 )
 
-                submit_button = st.form_submit_button(label='Apply changes')
+                st.divider()
+
+                # Define file formats and their properties
+                file_formats = {
+                    "png": {"label": "Download Plot as PNG", "mime": 'image/png'},
+                    "pdf": {"label": "Download Plot as PDF", "mime": 'application/pdf'},
+                    "svg": {"label": "Download Plot as SVG", "mime": 'image/svg+xml'},
+                }
+
+                # Add selectbox for choosing the file format
+                selected_format = st.selectbox(
+                    "Select file format:",
+                    list(file_formats.keys()),
+                    index=2,
+                    key='selected_format'
+                )
+
+                st.divider()
+                st.form_submit_button(label='Click to apply changes')
+
 
         st.title("Data plots")
 
@@ -367,35 +376,19 @@ def main():
         ax.locator_params(axis='y', nbins=st.session_state.y_tick_step_size)
 
         if st.session_state.show_grids:
-            ax.grid()
+            ax.grid(
+                linestyle='--',
+                linewidth=0.5,
+            )
 
         # Add colorbar
         divider = make_axes_locatable(ax)
         cax = divider.append_axes("right", size="1%", pad=0.05)
         cbar = fig.colorbar(cc, cax=cax, format="%.0f")
 
-        # ticks = [10**i for i in range(int(np.floor(np.log10(rho.min()))),
-        #                               int(np.ceil(np.log10(rho.max()))), 1)]
-        # cbar.set_ticks(ticks)
-        # cbar.set_ticklabels(["$10^{%d}$" % np.log10(tick) for tick in ticks])
         cbar.set_label('Resistivity (Ω.m)',
                        fontsize=st.session_state.axis_label_font_size)
         cbar.ax.tick_params(labelsize=st.session_state.tick_label_font_size)
-
-        # Define file formats and their properties
-        file_formats = {
-            "png": {"label": "Download Plot as PNG", "mime": 'image/png'},
-            "pdf": {"label": "Download Plot as PDF", "mime": 'application/pdf'},
-            "svg": {"label": "Download Plot as SVG", "mime": 'image/svg+xml'},
-        }
-
-        # Add selectbox for choosing the file format
-        selected_format = st.selectbox(
-            "Select file format:",
-            list(file_formats.keys()),
-            index=2,
-            key='selected_format'
-        )
 
         image_bytes = BytesIO()
 
