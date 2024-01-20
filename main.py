@@ -250,7 +250,7 @@ def main():
                     )
 
                 st.checkbox(
-                    'Show grids', value=False, key='show_grids',
+                    'Show grids', value=True, key='show_grids',
                     help="Check to show grids on the plot."
                 )
 
