@@ -134,7 +134,7 @@ def main():
                           help='Adjust the level of smoothing applied to the data.')
 
                 st.divider()
-                st.slider('Number of contours', 2, 30, 15, 1, key='number_of_contours',
+                st.slider('Number of contours', 2, 50, 20, 1, key='number_of_contours',
                           help='Specify the number of contour lines to be displayed.')
                 st.slider('Main contour line width', 0.1, 1.0, 0.5, 0.05,
                           key='main_contour_lw', help='Set the width of the main contour lines.')
