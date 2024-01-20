@@ -130,7 +130,7 @@ def main():
 
                 # Add sliders with help text
 
-                st.slider('Smoothing', 0.0, 20.0, 2.0, 0.1, key='smoothing',
+                st.slider('Smoothing', 0.0, 10.0, 0.5, 0.1, key='smoothing',
                           help='Adjust the level of smoothing applied to the data.')
 
                 st.divider()
