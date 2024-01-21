@@ -1,10 +1,10 @@
 import streamlit as st
-# import io
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from matplotlib.tri import Triangulation
 from scipy.ndimage import gaussian_filter
 from io import BytesIO
@@ -132,10 +132,9 @@ def main():
             with st.form(key='my_form', border=False):
                 st.write("Please enter the parameters for the plots")
 
-                # Add sliders with help text
-
-                st.slider('Smoothing', 0.0, 10.0, 0.5, 0.1, key='smoothing',
-                          help='Adjust the level of smoothing applied to the data.')
+                st.slider('Smoothing', 0.0, 10.0, 0.0, 0.1, key='smoothing',
+                          help='Adjust the level of smoothing applied to the data.',
+                          )
 
                 st.divider()
                 st.slider('Number of contours', 2, 50, 20, 1, key='number_of_contours',
@@ -186,7 +185,7 @@ def main():
                         'Figure width (inches)',
                         1,
                         100,
-                        50,
+                        30,
                         1,
                         key='figure_width_inches',
                         help="Specify the width of the figure in inches. This is useful when the figure is too small or too large."
@@ -199,7 +198,7 @@ def main():
                         'Figure height (inches)',
                         1,
                         100,
-                        15,
+                        10,
                         1,
                         key='figure_height_inches',
                         help="Specify the height of the figure in inches. This is useful when the figure is too small or too large."
@@ -243,7 +242,7 @@ def main():
 
                 with col1_xtick_number_bins:
                     st.number_input(
-                        "Number of x tick bins", 1, 100, 20, 1, key='x_tick_step_size',
+                        "Number of x tick bins", 1, 100, 30, 1, key='x_tick_step_size',
                         help="Specify the number of bins for the x-axis."
                     )
 
@@ -306,7 +305,7 @@ def main():
             # apply masking
             triang.set_mask(maxi > alpha)
 
-        apply_mask(triang, alpha=10)
+        apply_mask(triang, alpha=15)
 
         fig, ax = plt.subplots(
             facecolor='white', edgecolor='white',
@@ -320,14 +319,18 @@ def main():
                            colors='k',
                            linewidths=st.session_state.main_contour_lw,
                            )
+        cc = ax.tricontourf(triang, rho, levels=clevels, cmap=st.session_state.color_map,
+                            norm=matplotlib.colors.LogNorm(vmin=rho.min(), vmax=rho.max()))
+        
+
+        
 
         # Create labels for each contour line
-        labels = [str(level) for level in cs.levels]
-
+        # labels = [str(level) for level in cs.levels]
         # Label every other level using strings
         clabels = ax.clabel(
             cs, cs.levels[::st.session_state.skip_contour_every_nth], inline=True, fmt='%0.0f', colors='k',
-            fontsize=st.session_state.fontsize_contour_label, use_clabeltext=True
+            fontsize=st.session_state.fontsize_contour_label,
         )
 
         # Make every fifth contour line and label bold
@@ -337,8 +340,7 @@ def main():
                 contour_line.set_linewidth(st.session_state.bold_contour_lw)
 
         # Filled contour plot
-        cc = ax.tricontourf(triang, rho, levels=clevels, cmap=st.session_state.color_map,
-                            norm=matplotlib.colors.LogNorm(vmin=rho.min(), vmax=rho.max()))
+       
 
         ax.scatter(st.session_state.df_electrode_locations.iloc[:, 0],
                    st.session_state.df_electrode_locations.iloc[:, 1],
@@ -386,9 +388,20 @@ def main():
             )
 
         # Add colorbar
-        divider = make_axes_locatable(ax)
-        cax = divider.append_axes("right", size="1%", pad=0.05)
+        # divider = make_axes_locatable(ax)
+        # cax = divider.append_axes("right", size="0.6%", pad=0.02)
+        # ax_pos = ax.get_position()
+
+        # Define the inset_axes parameters with absolute width
+        cax_width = 0.05  # Adjust the width as needed
+        cax = inset_axes(ax, width="10%", height="100%",
+                         loc='center right',
+                         bbox_to_anchor=(0.935, 0, 0.08, 1.0),
+                         bbox_transform=ax.transAxes)
         cbar = fig.colorbar(cc, cax=cax, format="%.0f")
+
+        # Adjust the position of the original axis to make room for the colorbar
+        # ax.set_position([ax_pos.x0, ax_pos.y0, ax_pos.width - cax_width, ax_pos.height])
 
         cbar.set_label('Resistivity (Ω.m)',
                        fontsize=st.session_state.axis_label_font_size)
