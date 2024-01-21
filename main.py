@@ -12,7 +12,7 @@ from io import BytesIO
 import hmac
 
 
-st.set_page_config(page_title="Page Title", layout="wide")
+st.set_page_config(page_title="National Rocks", layout="wide")
 
 st.markdown("""
     <style>
