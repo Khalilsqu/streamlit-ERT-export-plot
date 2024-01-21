@@ -76,57 +76,35 @@ def main():
     st.write("x, elevation, resistivity")
 
     # Upload Excel file through Streamlit's file uploader
-    uploaded_file = st.file_uploader(
-        "Choose an Excel file", type=["xlsx", "xls"])
+    with st.sidebar:
+        uploaded_file = st.file_uploader(
+            "Choose an Excel file", type=["xlsx", "xls"])
 
-    if uploaded_file is not None:
-        st.toast('Excel file uploaded successfully', icon='😍')
+        if uploaded_file is not None:
+            st.toast('Excel file uploaded successfully', icon='😍')
 
-        # Use Pandas to read the Excel file
-        try:
-            df = pd.read_excel(uploaded_file, engine='openpyxl')
-            st.session_state.df = df
-            st.dataframe(df)  # Display the DataFrame in Streamlit
+            # Use Pandas to read the Excel file
+            try:
+                df = pd.read_excel(uploaded_file, engine='openpyxl')
+                st.session_state.df = df
+                st.dataframe(df)  # Display the DataFrame in Streamlit
 
-            column_to_check = 0  # Change this to the index of your desired column
+                upload_file_elevation = st.file_uploader(
+                    "Choose an Excel file for electrode elevation", type=["xlsx", "xls"])
 
-            # Find the index where the values in the specified column start decreasing
-            index_to_stop = (df.iloc[:, column_to_check].diff() < 0).idxmax()
+                if upload_file_elevation is not None:
 
-            # Get the data until the index where it starts decreasing again
-            filtered_data = df.iloc[:index_to_stop, :]
+                    df_electrode_locations = pd.read_excel(
+                        upload_file_elevation, engine='openpyxl')
+                    st.session_state.df_electrode_locations = df_electrode_locations
+                    st.dataframe(df_electrode_locations)
 
-            # Extract relevant information
-            spacing = filtered_data.iloc[1, 0] - filtered_data.iloc[0, 0]
+            except Exception as e:
+                st.toast('Error: Please upload a valid Excel file', icon='🤯')
+        else:
+            st.info("Please upload an Excel file.")
 
-            # Calculate actual points based on the first point and spacing
-            first_point = 0
-            num_points = len(filtered_data)
-            actual_points = np.linspace(
-                first_point, (num_points - 1) * spacing, num_points)
-
-            # Calculate mean of the second column in filtered_data for two rolling rows
-            rolling_mean = (
-                filtered_data.iloc[:, 1] + filtered_data.iloc[:, 1].shift(-1)) / 2
-
-            # Ensure actual_points and rolling_mean have the same length
-            min_length = min(len(actual_points), len(rolling_mean))
-            actual_points = actual_points[:min_length]
-            rolling_mean = rolling_mean[:min_length]
-
-            # Fill the last NaN value in rolling_mean with the previous value
-            rolling_mean.iloc[-1] = rolling_mean.iloc[-2]
-
-            result_df = pd.DataFrame(
-                {'Actual Points': actual_points, 'Mean of Second Column': rolling_mean})
-
-            st.session_state.df_electrode_locations = result_df
-        except Exception as e:
-            st.toast('Error: Please upload a valid Excel file', icon='🤯')
-    else:
-        st.info("Please upload an Excel file.")
-
-    if st.session_state.df is not None:
+    if st.session_state.df is not None and st.session_state.df_electrode_locations is not None:
 
         with st.expander("Plot settings"):
             with st.form(key='my_form', border=False):
@@ -185,7 +163,7 @@ def main():
                         'Figure width (inches)',
                         1,
                         100,
-                        30,
+                        20,
                         1,
                         key='figure_width_inches',
                         help="Specify the width of the figure in inches. This is useful when the figure is too small or too large."
@@ -198,7 +176,7 @@ def main():
                         'Figure height (inches)',
                         1,
                         100,
-                        10,
+                        8,
                         1,
                         key='figure_height_inches',
                         help="Specify the height of the figure in inches. This is useful when the figure is too small or too large."
@@ -220,7 +198,7 @@ def main():
 
                 with col1:
                     st.number_input(
-                        'Electrode marker size', 1, 40, 4, 1, key='electrode_marker_size',
+                        'Electrode marker size', 1, 60, 20, 1, key='electrode_marker_size',
                         help="Specify the size of the electrode markers."
                     )
                 with col2:
@@ -305,7 +283,7 @@ def main():
             # apply masking
             triang.set_mask(maxi > alpha)
 
-        apply_mask(triang, alpha=15)
+        apply_mask(triang, alpha=10)
 
         fig, ax = plt.subplots(
             facecolor='white', edgecolor='white',
@@ -321,9 +299,6 @@ def main():
                            )
         cc = ax.tricontourf(triang, rho, levels=clevels, cmap=st.session_state.color_map,
                             norm=matplotlib.colors.LogNorm(vmin=rho.min(), vmax=rho.max()))
-        
-
-        
 
         # Create labels for each contour line
         # labels = [str(level) for level in cs.levels]
@@ -331,6 +306,7 @@ def main():
         clabels = ax.clabel(
             cs, cs.levels[::st.session_state.skip_contour_every_nth], inline=True, fmt='%0.0f', colors='k',
             fontsize=st.session_state.fontsize_contour_label,
+            manual=True
         )
 
         # Make every fifth contour line and label bold
@@ -338,9 +314,6 @@ def main():
             if (i + 1) % st.session_state.contour_bold_every_nth == 0:
                 clabel.set_fontweight('bold')
                 contour_line.set_linewidth(st.session_state.bold_contour_lw)
-
-        # Filled contour plot
-       
 
         ax.scatter(st.session_state.df_electrode_locations.iloc[:, 0],
                    st.session_state.df_electrode_locations.iloc[:, 1],
@@ -367,10 +340,15 @@ def main():
         ax.set_ylim([min(triang.y) - 0.1 * y_range,
                     max(triang.y) + 0.2 * y_range])
 
+        ax.xaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+        ax.yaxis.set_minor_locator(matplotlib.ticker.AutoMinorLocator())
+
         ax.tick_params(axis='both', which='major',
                        labelsize=st.session_state.tick_label_font_size)
         ax.tick_params(axis='both', which='minor',
-                       labelsize=st.session_state.tick_label_font_size)
+                       labelsize=st.session_state.tick_label_font_size,
+                       length=2
+                       )
 
         ax.set_title(
             f'ERT Data for {uploaded_file.name.split(".")[0]}',
@@ -388,16 +366,16 @@ def main():
             )
 
         # Add colorbar
-        # divider = make_axes_locatable(ax)
-        # cax = divider.append_axes("right", size="0.6%", pad=0.02)
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="0.6%", pad=0.02)
         # ax_pos = ax.get_position()
 
         # Define the inset_axes parameters with absolute width
-        cax_width = 0.05  # Adjust the width as needed
-        cax = inset_axes(ax, width="10%", height="100%",
-                         loc='center right',
-                         bbox_to_anchor=(0.935, 0, 0.08, 1.0),
-                         bbox_transform=ax.transAxes)
+        # cax_width = 0.05  # Adjust the width as needed
+        # cax = inset_axes(ax, width="10%", height="100%",
+        #                  loc='center right',
+        #                  bbox_to_anchor=(0.935, 0, 0.08, 1.0),
+        #                  bbox_transform=ax.transAxes)
         cbar = fig.colorbar(cc, cax=cax, format="%.0f")
 
         # Adjust the position of the original axis to make room for the colorbar
