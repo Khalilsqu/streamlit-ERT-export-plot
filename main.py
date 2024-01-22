@@ -306,7 +306,6 @@ def main():
         clabels = ax.clabel(
             cs, cs.levels[::st.session_state.skip_contour_every_nth], inline=True, fmt='%0.0f', colors='k',
             fontsize=st.session_state.fontsize_contour_label,
-            manual=True
         )
 
         # Make every fifth contour line and label bold
